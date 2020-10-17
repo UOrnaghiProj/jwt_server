@@ -35,7 +35,9 @@ public class JWTWebSecurityConfig extends WebSecurityConfigurerAdapter
 	@Autowired
 	public void configureGlobal(AuthenticationManagerBuilder auth) throws Exception 
 	{
-		auth.userDetailsService(userDetailsService).passwordEncoder(passwordEncoderBean());
+		auth
+			.userDetailsService(userDetailsService)
+			.passwordEncoder(passwordEncoderBean());
 	}
 
 	@Bean
@@ -53,10 +55,14 @@ public class JWTWebSecurityConfig extends WebSecurityConfigurerAdapter
 
 	@Override
 	protected void configure(HttpSecurity httpSecurity) throws Exception {
-		httpSecurity.csrf().disable()
+		httpSecurity.
+		csrf().disable()
 		.sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
 		.and()
-		.authorizeRequests().anyRequest().authenticated();
+		// dont authenticate this particular request
+		.authorizeRequests().antMatchers("/auth").permitAll().
+		// all other requests need to be authenticated
+		anyRequest().authenticated();
 
 	}
 

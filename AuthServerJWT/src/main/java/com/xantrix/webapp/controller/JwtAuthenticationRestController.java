@@ -11,10 +11,13 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 //import org.springframework.web.bind.annotation.CrossOrigin;
@@ -48,22 +51,27 @@ public class JwtAuthenticationRestController
 	
 	private static final Logger logger = LoggerFactory.getLogger(JwtAuthenticationRestController.class);
 
-	@PostMapping(value = "${sicurezza.uri}")
+	
+	@PostMapping(value = "${sicurezza.uri}") //Parametro presente nel file application.yml
 	public ResponseEntity<?> createAuthenticationToken(@RequestBody JwtTokenRequest authenticationRequest)
-			throws AuthenticationException 
+			throws Exception 
 	{
 		logger.info("Autenticazione e Generazione Token");
 
-		authenticate(authenticationRequest.getUsername(), authenticationRequest.getPassword());
+		Authentication auth = authenticate(authenticationRequest.getUsername(), authenticationRequest.getPassword());
 
-		final UserDetails userDetails = userDetailsService
-				.loadUserByUsername(authenticationRequest.getUsername());
+		if (!(auth instanceof AnonymousAuthenticationToken)) {
+			UserDetails userDetails = (UserDetails) auth.getPrincipal();
 
-		final String token = jwtTokenUtil.generateToken(userDetails);
-		
-		logger.warn(String.format("Token %s", token));
+			final String token = jwtTokenUtil.generateToken(userDetails);
+			logger.warn(String.format("Token %s", token));
 
-		return ResponseEntity.ok(new JwtTokenResponse(token));
+			return ResponseEntity.ok(new JwtTokenResponse(token));
+
+		}else {
+			throw new Exception();
+		}
+
 	}
 
 	@RequestMapping(value = "${sicurezza.uri}", method = RequestMethod.GET)
@@ -90,14 +98,16 @@ public class JwtAuthenticationRestController
 		return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(e.getMessage());
 	}
 
-	private void authenticate(String username, String password) 
+	private Authentication authenticate(String username, String password) 
 	{
+		Authentication auth = null;
+		
 		Objects.requireNonNull(username);
 		Objects.requireNonNull(password);
 
 		try 
 		{
-			authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(username, password));
+			 auth = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(username, password));
 		} 
 		catch (DisabledException e) 
 		{
@@ -109,5 +119,6 @@ public class JwtAuthenticationRestController
 			logger.warn("CREDENZIALI NON VALIDE");
 			throw new AuthenticationException("CREDENZIALI NON VALIDE", e);
 		}
+		return auth;
 	}
 }

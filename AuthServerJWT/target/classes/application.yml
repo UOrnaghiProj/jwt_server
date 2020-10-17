@@ -13,9 +13,9 @@ server:
 # = Parametri Servizio gestUser
 # ==============================================================
 gestuser:
+  password: password
   srvUrl: http://localhost:8019/api/utenti/cerca/userid/
   userId: ReadUser
-  password: BimBumBam_2018
 
 # ==============================================================
 # = Parametri Sicurezza JWT 

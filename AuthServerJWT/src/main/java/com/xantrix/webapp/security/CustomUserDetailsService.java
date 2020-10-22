@@ -14,6 +14,8 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
+import com.sun.tools.sjavac.Log;
+
 /**
  * Servizio per ottenere le specifiche dell'utente dal servizio gestuser
  * @author umberto
@@ -86,7 +88,7 @@ public class CustomUserDetailsService implements UserDetailsService
 		
 		RestTemplate restTemplate = new RestTemplate();
 		restTemplate.getInterceptors().add(new BasicAuthenticationInterceptor(Config.getUserId(), Config.getPassword()));
-		System.out.println("***Prelevo i dati Utente dal DB***");
+		logger.info("***Prelevo i dati Utente dal DB***");
 		
 		Utenti utente = null;
 
